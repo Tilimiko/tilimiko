@@ -31,6 +31,12 @@ class Transaction:
         if self.signature is None or self.public_key is None:
             return False
 
+        if not isinstance(self.amount, (int, float)) or self.amount <= 0:
+            return False
+
+        if not self.sender or not self.recipient:
+            return False
+
         try:
             public_key = serialization.load_pem_public_key(
                 self.public_key
