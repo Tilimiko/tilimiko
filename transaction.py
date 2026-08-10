@@ -27,7 +27,7 @@ class Transaction:
         self.signature = wallet.sign(self.signing_data())
         self.public_key = wallet.get_public_key()
 
-    def is_valid(self):
+    def is_valid(self, state=None):
         if self.signature is None or self.public_key is None:
             return False
 
@@ -36,6 +36,13 @@ class Transaction:
 
         if not self.sender or not self.recipient:
             return False
+
+        if state is not None:
+            if self.sender == "sender-public-key":
+                return False
+
+            if state.get_balance(self.sender) < self.amount:
+                return False
 
         try:
             public_key = serialization.load_pem_public_key(
@@ -58,8 +65,8 @@ if __name__ == "__main__":
     sender_wallet = Wallet()
 
     transaction = Transaction(
-        sender="sender-public-key",
-        recipient="recipient-public-key",
+        sender="Alice",
+        recipient="Bob",
         amount=10
     )
 
