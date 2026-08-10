@@ -15,28 +15,30 @@ class BlockchainState:
         if amount < 0:
             raise ValueError("Amount cannot be negative")
 
-        current = self.get_balance(address)
-        self.balances[address] = current + amount
+        self.balances[address] = self.get_balance(address) + amount
 
     def subtract_balance(self, address, amount):
         if amount < 0:
             raise ValueError("Amount cannot be negative")
 
-        current = self.get_balance(address)
-
-        if amount > current:
+        if amount > self.get_balance(address):
             raise ValueError("Insufficient balance")
 
-        self.balances[address] = current - amount
+        self.balances[address] = self.get_balance(address) - amount
+
+    def apply_transaction(self, transaction):
+        if not transaction.is_valid(self):
+            raise ValueError("Invalid transaction")
+
+        self.subtract_balance(transaction.sender, transaction.amount)
+        self.add_balance(transaction.recipient, transaction.amount)
 
 
 if __name__ == "__main__":
     state = BlockchainState()
 
-    state.set_balance("Alice", 100)
-    state.subtract_balance("Alice", 30)
-    state.add_balance("Bob", 30)
+    state.set_balance("Alice", 50)
 
-    print("Tilimiko state system started!")
+    print("Before transaction:")
     print("Alice balance:", state.get_balance("Alice"))
     print("Bob balance:", state.get_balance("Bob"))
