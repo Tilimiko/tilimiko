@@ -1,4 +1,7 @@
 import json
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.primitives import serialization
 from wallet import Wallet
 
 
@@ -8,6 +11,7 @@ class Transaction:
         self.recipient = recipient
         self.amount = amount
         self.signature = None
+        self.public_key = None
 
     def to_dict(self):
         return {
@@ -21,9 +25,27 @@ class Transaction:
 
     def sign(self, wallet):
         self.signature = wallet.sign(self.signing_data())
+        self.public_key = wallet.get_public_key()
 
-    def is_signed(self):
-        return self.signature is not None
+    def is_valid(self):
+        if self.signature is None or self.public_key is None:
+            return False
+
+        try:
+            public_key = serialization.load_pem_public_key(
+                self.public_key
+            )
+
+            public_key.verify(
+                self.signature,
+                self.signing_data().encode(),
+                ec.ECDSA(hashes.SHA256())
+            )
+
+            return True
+
+        except Exception:
+            return False
 
 
 if __name__ == "__main__":
@@ -39,4 +61,5 @@ if __name__ == "__main__":
 
     print("Tilimiko transaction created!")
     print("Amount:", transaction.amount)
-    print("Signed:", transaction.is_signed())
+    print("Signed:", transaction.signature is not None)
+    print("Signature valid:", transaction.is_valid())
